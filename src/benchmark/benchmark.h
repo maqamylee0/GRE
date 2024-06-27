@@ -207,7 +207,7 @@ public:
         update_ratio = stod(get_with_default(flags, "update", "0"));
         scan_ratio = stod(get_with_default(flags, "scan", "0"));
         scan_num = stoi(get_with_default(flags, "scan_num", "100"));
-        operations_num = stoi(get_with_default(flags, "operations_num", "1000000000")); // required
+        operations_num = stoull(get_with_default(flags, "operations_num", "1000000000")); // required
         table_size = stoi(get_with_default(flags, "table_size", "-1"));
         init_table_ratio = stod(get_with_default(flags, "init_table_ratio", "0.5"));
         del_table_ratio = stod(get_with_default(flags, "del_table_ratio", "0.5"));
@@ -238,7 +238,9 @@ public:
 
     void generate_operations(KEY_TYPE *keys) {
         // prepare operations
-        operations.reserve(operations_num);
+        //operations.reserve(operations_num);
+        size_t initial_reserve_size = operations_num / 10; // Example: 1/10th of operations_num
+        operations.reserve(initial_reserve_size);
         COUT_THIS("sample keys.");
         KEY_TYPE *sample_ptr = nullptr;
         if (sample_distribution == "uniform") {
@@ -263,6 +265,9 @@ public:
         
         size_t temp_counter = 0;
         for (size_t i = 0; i < operations_num; ++i) {
+            if (operations.size() == operations.capacity()) {
+                operations.reserve(operations.size() + initial_reserve_size); // Increase capacity
+            }
             auto prob = ratio_dis(gen);
             if (prob < read_ratio) {
                 // if (temp_counter >= table_size) {
